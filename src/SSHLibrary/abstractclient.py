@@ -1141,32 +1141,28 @@ class AbstractSFTPClient(object):
         if len(sources) > 1 and destination[-1] != '/' and not self.is_dir(destination):
             raise ValueError('It is not possible to copy multiple source '
                              'files to one destination file.')
-        dir_path, filename = self._parse_path_elements(destination,
-                                                       path_separator)
+        dir_path, filename = self._parse_path_elements(destination)
         if filename:
-            files = [path_separator.join([dir_path, filename])]
+            files = ['/'.join([dir_path, filename])]
         else:
-            files = [path_separator.join([dir_path, os.path.basename(path)])
+            files = ['/'.join([dir_path, os.path.basename(path)])
                      for path in sources]
         return files, dir_path
 
     def _format_destination_path(self, destination):
         destination = destination.replace('\\', '/')
-        destination = ntpath.splitdrive(destination)[-1]
         return destination
 
-    def _parse_path_elements(self, destination, path_separator):
+    def _parse_path_elements(self, destination):
         def _isabs(path):
-            if destination.startswith(path_separator):
-                return True
-            if path_separator == '\\' and path[1:3] == ':\\':
+            if path.startswith('/'):
                 return True
             return False
         if not _isabs(destination):
-            destination = path_separator.join([self._homedir, destination])
+            destination = '/'.join([self._homedir, destination])
         if self.is_dir(destination):
             return destination, ''
-        return destination.rsplit(path_separator, 1)
+        return destination.rsplit('/', 1)
 
     def _create_missing_remote_path(self, path, mode):
         if path.startswith(b'/'):
